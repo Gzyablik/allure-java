@@ -32,6 +32,7 @@ import io.qameta.allure.model.TestResult;
 import io.qameta.allure.model.TestResultContainer;
 import io.qameta.allure.util.AnnotationUtils;
 import io.qameta.allure.util.ObjectUtils;
+import io.qameta.allure.util.PropertiesUtils;
 import io.qameta.allure.util.ResultsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -337,6 +338,25 @@ public class AllureTestNg implements
         getLifecycle().writeTestCase(uuid);
     }
 
+    protected void stopTestCase(final String uuid,
+                                final Throwable throwable,
+                                final Status status,
+                                final boolean isTest) {
+        final StatusDetails details = getStatusDetails(throwable).orElse(null);
+        getLifecycle().updateTestCase(uuid, setStatus(status, details));
+        getLifecycle().stopTestCase(uuid);
+        final boolean isTestsOnly = Boolean.valueOf(PropertiesUtils.loadAllureProperties()
+                                                                    .getProperty("allure.report.tests.only",
+                                                                                "false"));
+        if (isTestsOnly) {
+            if (isTest) {
+                getLifecycle().writeTestCase(uuid);
+            }
+        } else {
+            getLifecycle().writeTestCase(uuid);
+        }
+    }
+
     @Override
     public void onTestSkipped(final ITestResult result) {
         Current current = currentTestResult.get();
@@ -507,7 +527,7 @@ public class AllureTestNg implements
         final String parentUuid = UUID.randomUUID().toString();
 
         startTestCase(itr, parentUuid, uuid);
-        stopTestCase(uuid, itr.getThrowable(), getStatus(itr.getThrowable()));
+        stopTestCase(uuid, itr.getThrowable(), getStatus(itr.getThrowable()), itr.getMethod().isTest());
         //do nothing
     }
 
