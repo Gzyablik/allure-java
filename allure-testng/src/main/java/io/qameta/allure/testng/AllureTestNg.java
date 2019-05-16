@@ -527,7 +527,7 @@ public class AllureTestNg implements
         final String parentUuid = UUID.randomUUID().toString();
 
         startTestCase(itr, parentUuid, uuid);
-        stopTestCase(uuid, itr.getThrowable(), getStatus(itr.getThrowable()));
+        stopTestCase(uuid, itr.getThrowable(), getStatus(itr.getThrowable()), itr.getMethod().isTest());
         //do nothing
     }
 
